@@ -132,3 +132,112 @@ class ImageEditorApp:
 
         self.root.config(menu=menubar)
 
+    # Layout
+    def _build_layout(self):
+        """Build the main window layout."""
+        self.main = ttk.Frame(self.root, padding=14)
+        self.main.pack(fill=tk.BOTH, expand=True)
+
+        self.main.columnconfigure(0, weight=3)
+        self.main.columnconfigure(1, weight=1)
+        self.main.rowconfigure(0, weight=1)
+
+        left = ttk.Frame(self.main)
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 12))
+        left.rowconfigure(1, weight=1)
+        left.columnconfigure(0, weight=1)
+
+        header = ttk.Frame(left)
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        header.columnconfigure(0, weight=1)
+
+        ttk.Label(header, text="Image Editor", style="Title.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(header, text="Open | Edit | Undo/Redo | Save", style="Muted.TLabel").grid(row=1, column=0, sticky="w")
+
+        canvas_card = ttk.Frame(left, style="Card.TFrame", padding=10)
+        canvas_card.grid(row=1, column=0, sticky="nsew")
+        canvas_card.rowconfigure(0, weight=1)
+        canvas_card.columnconfigure(0, weight=1)
+
+        self.canvas = tk.Canvas(
+            canvas_card,
+            bg="#050a14",
+            highlightthickness=1,
+            highlightbackground=self.UI["border"],
+            bd=0
+        )
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+
+        right = ttk.Frame(self.main)
+        right.grid(row=0, column=1, sticky="nsew")
+        right.columnconfigure(0, weight=1)
+
+        # Quick actions card
+        quick = ttk.Frame(right, style="Card.TFrame", padding=12)
+        quick.grid(row=0, column=0, sticky="ew", pady=(0, 12))
+        quick.columnconfigure((0, 1), weight=1)
+
+        ttk.Label(quick, text="Quick Filters", style="H2.TLabel").grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 8))
+        ttk.Button(quick, text="Grayscale", style="Accent.TButton", command=self.apply_grayscale).grid(row=1, column=0, sticky="ew", padx=(0, 6))
+        ttk.Button(quick, text="Edge Detect", command=self.apply_edge).grid(row=1, column=1, sticky="ew", padx=(6, 0))
+
+        # Transform card
+        transform = ttk.Frame(right, style="Card.TFrame", padding=12)
+        transform.grid(row=1, column=0, sticky="ew", pady=(0, 12))
+        transform.columnconfigure((0, 1, 2), weight=1)
+
+        ttk.Label(transform, text="Transforms", style="H2.TLabel").grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
+        ttk.Button(transform, text="↻ 90°", style="Small.TButton", command=lambda: self.apply_rotate(90)).grid(row=1, column=0, sticky="ew", padx=3)
+        ttk.Button(transform, text="⤾ 180°", style="Small.TButton", command=lambda: self.apply_rotate(180)).grid(row=1, column=1, sticky="ew", padx=3)
+        ttk.Button(transform, text="↺ 270°", style="Small.TButton", command=lambda: self.apply_rotate(270)).grid(row=1, column=2, sticky="ew", padx=3)
+
+        ttk.Button(transform, text="⇋ Flip H", style="Small.TButton", command=lambda: self.apply_flip("horizontal")).grid(row=2, column=0, sticky="ew", padx=3, pady=(8, 0))
+        ttk.Button(transform, text="⇅ Flip V", style="Small.TButton", command=lambda: self.apply_flip("vertical")).grid(row=2, column=1, sticky="ew", padx=3, pady=(8, 0))
+
+        # Adjustments card
+        adjust = ttk.Frame(right, style="Card.TFrame", padding=12)
+        adjust.grid(row=2, column=0, sticky="ew", pady=(0, 12))
+        adjust.columnconfigure(0, weight=1)
+
+        ttk.Label(adjust, text="Adjustments (drag to preview)", style="H2.TLabel").grid(row=0, column=0, sticky="w", pady=(0, 8))
+
+        def slider_row(r: int, title: str, scale_widget: ttk.Scale):
+            ttk.Label(adjust, text=title, style="Card.TLabel").grid(row=r, column=0, sticky="w")
+            scale_widget.grid(row=r + 1, column=0, sticky="ew", pady=(4, 10))
+
+        self.blur_scale = ttk.Scale(adjust, from_=1, to=31, orient="horizontal",
+                                    command=lambda _v: self._preview_slider("blur"))
+        slider_row(1, "Blur (1–31)", self.blur_scale)
+        self.blur_scale.set(self.blur_var.get())
+
+        self.brightness_scale = ttk.Scale(adjust, from_=-100, to=100, orient="horizontal",
+                                          command=lambda _v: self._preview_slider("brightness"))
+        slider_row(3, "Brightness (-100..100)", self.brightness_scale)
+        self.brightness_scale.set(self.brightness_var.get())
+
+        self.contrast_scale = ttk.Scale(adjust, from_=-100, to=100, orient="horizontal",
+                                        command=lambda _v: self._preview_slider("contrast"))
+        slider_row(5, "Contrast (-100..100)", self.contrast_scale)
+        self.contrast_scale.set(self.contrast_var.get())
+
+        self.scale_scale = ttk.Scale(adjust, from_=10, to=200, orient="horizontal",
+                                     command=lambda _v: self._preview_slider("scale"))
+        slider_row(7, "Resize % (10–200)", self.scale_scale)
+        self.scale_scale.set(self.scale_var.get())
+
+        for w in (self.blur_scale, self.brightness_scale, self.contrast_scale, self.scale_scale):
+            w.bind("<ButtonPress-1>", self._start_preview)
+            w.bind("<ButtonRelease-1>", self._commit_preview)
+
+        # History card
+        hist = ttk.Frame(right, style="Card.TFrame", padding=12)
+        hist.grid(row=3, column=0, sticky="ew")
+        hist.columnconfigure((0, 1, 2), weight=1)
+
+        ttk.Label(hist, text="History", style="H2.TLabel").grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
+        ttk.Button(hist, text="↶ Undo", command=self.undo).grid(row=1, column=0, sticky="ew", padx=3)
+        ttk.Button(hist, text="↷ Redo", command=self.redo).grid(row=1, column=1, sticky="ew", padx=3)
+        ttk.Button(hist, text="↻ Reset", style="Danger.TButton", command=self.reset_to_original).grid(row=1, column=2, sticky="ew", padx=3)
+
+        # Status bar
+        self.status = ttk.Label(self.root, text="", anchor="w", padding=(12, 8), style="Muted.TLabel")
