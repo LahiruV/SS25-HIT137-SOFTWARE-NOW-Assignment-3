@@ -241,3 +241,13 @@ class ImageEditorApp:
 
         # Status bar
         self.status = ttk.Label(self.root, text="", anchor="w", padding=(12, 8), style="Muted.TLabel")
+        self.status.pack(side=tk.BOTTOM, fill=tk.X)
+
+    # Helpers 
+
+    def _require_image(self) -> bool:
+        """Return True if an image is loaded; otherwise show a warning and return False."""
+        if not self.model.has_image():
+            messagebox.showwarning("No Image", "Please open an image first (File → Open).")
+            return False
+        return True
