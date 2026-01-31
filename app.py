@@ -251,3 +251,65 @@ class ImageEditorApp:
             messagebox.showwarning("No Image", "Please open an image first (File → Open).")
             return False
         return True
+    
+    def _cv_to_tk(self, img_bgr: np.ndarray, max_w: int, max_h: int) -> ImageTk.PhotoImage:
+        """
+        Convert an OpenCV BGR image to a Tk-compatible PhotoImage.
+
+        The output is resized to fit within (max_w, max_h) while preserving aspect ratio.
+        """
+        rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+        pil = Image.fromarray(rgb)
+
+        w, h = pil.size
+        scale = min(max_w / w, max_h / h, 1.0)
+        new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
+        pil = pil.resize(new_size, Image.Resampling.LANCZOS)
+        return ImageTk.PhotoImage(pil)
+
+    def _render(self):
+        """Render the current image onto the canvas."""
+        self.canvas.delete("all")
+        img = self.model.current()
+
+        if img is None:
+            self.canvas.create_text(
+                30, 30,
+                anchor="nw",
+                fill="#93a4c7",
+                font=("Segoe UI", 12),
+                text="No image loaded\n\nUse File → Open to select a JPG / PNG / BMP."
+            )
+            return
+
+        self.root.update_idletasks()
+        cw = self.canvas.winfo_width()
+        ch = self.canvas.winfo_height()
+        if cw < 50 or ch < 50:
+            cw, ch = 800, 500
+
+        self._tk_image = self._cv_to_tk(img, cw, ch)
+        self.canvas.create_image(cw // 2, ch // 2, image=self._tk_image, anchor="center")
+
+        w, h = self.model.get_dimensions()
+        self._update_status(f"{self.model.filename()}  |  {w}x{h}px")
+
+    def _update_status(self, text: str):
+        """Update the status bar message."""
+        self.status.config(text=text)
+
+    def _ui_snapshot(self) -> Dict[str, Any]:
+        """
+        Capture current UI control values.
+
+        Uses the scales as the source of truth because they reflect what the user
+        is actually dragging.
+        """
+        return {
+            "blur": int(float(self.blur_scale.get())),
+            "brightness": int(float(self.brightness_scale.get())),
+            "contrast": int(float(self.contrast_scale.get())),
+            "scale": int(float(self.scale_scale.get())),
+        }
+    
+                    
