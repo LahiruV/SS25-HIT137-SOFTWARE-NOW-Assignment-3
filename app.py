@@ -51,3 +51,59 @@ class ImageEditorApp:
         self._build_layout()
         self._bind_shortcuts()
         self._update_status("Ready. Open an image to begin.")
+        
+    def _apply_theme(self):
+        """Apply a theme using ttk styling."""
+        style = ttk.Style()
+        try:
+            style.theme_use("clam")
+        except Exception:
+            pass
+
+        self.UI = {
+            "bg": "#0b1220",
+            "panel": "#0f1a2b",
+            "panel2": "#0c1626",
+            "border": "#1e2a3e",
+            "text": "#e6eefc",
+            "muted": "#a9b7d0",
+            "accent": "#3b82f6",
+            "danger": "#ef4444",
+        }
+
+        self.root.configure(bg=self.UI["bg"])
+
+        style.configure("TFrame", background=self.UI["bg"])
+        style.configure("Card.TFrame", background=self.UI["panel"], relief="flat")
+        style.configure("TLabel", background=self.UI["bg"], foreground=self.UI["text"])
+        style.configure("Muted.TLabel", background=self.UI["bg"], foreground=self.UI["muted"])
+        style.configure("Card.TLabel", background=self.UI["panel"], foreground=self.UI["text"])
+        style.configure("Title.TLabel", background=self.UI["bg"], foreground=self.UI["text"],
+                        font=("Segoe UI", 14, "bold"))
+        style.configure("H2.TLabel", background=self.UI["panel"], foreground=self.UI["text"],
+                        font=("Segoe UI", 10, "bold"))
+
+        # Buttons
+        style.configure("TButton",
+                        font=("Segoe UI", 10),
+                        padding=(12, 8),
+                        background=self.UI["panel"],
+                        foreground=self.UI["text"])
+        style.map("TButton",
+                  background=[("active", self.UI["panel2"])],
+                  foreground=[("active", self.UI["text"])])
+
+        style.configure("Accent.TButton", background=self.UI["accent"], foreground="white")
+        style.map("Accent.TButton",
+                  background=[("active", "#777777")],
+                  foreground=[("active", "white")])
+
+        style.configure("Danger.TButton", background=self.UI["danger"], foreground="white")
+        style.map("Danger.TButton",
+                  background=[("active", "#dc2626")],
+                  foreground=[("active", "white")])
+
+        style.configure("Small.TButton", padding=(10, 6))
+
+        # Scales
+        style.configure("TScale", background=self.UI["panel"])
