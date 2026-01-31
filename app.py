@@ -312,4 +312,304 @@ class ImageEditorApp:
             "scale": int(float(self.scale_scale.get())),
         }
     
+    def _apply_ui_snapshot(self, ui: Dict[str, Any]):
+        """Apply UI values to both variables and visible controls."""
+        self.blur_var.set(int(ui.get("blur", 1)))
+        self.brightness_var.set(int(ui.get("brightness", 0)))
+        self.contrast_var.set(int(ui.get("contrast", 0)))
+        self.scale_var.set(int(ui.get("scale", 100)))
+
+        self.blur_scale.set(self.blur_var.get())
+        self.brightness_scale.set(self.brightness_var.get())
+        self.contrast_scale.set(self.contrast_var.get())
+        self.scale_scale.set(self.scale_var.get())
+
+    def _current_state(self) -> EditorState:
+        """
+        Build an EditorState snapshot of the current model + UI.
+
+        Returns a tiny placeholder image if none is loaded to keep typing simple.
+        """
+        img = self.model.current()
+        if img is None:
+            img = np.zeros((10, 10, 3), dtype=np.uint8)
+        return EditorState(
+            image_bgr=img.copy(),
+            file_path=self.model.file_path(),
+            ui=self._ui_snapshot()
+        )
+
+    def _push_history(self):
+        """Push the current state to history if an image is loaded."""
+        if self.model.has_image():
+            self.history.push(self._current_state())
+
+    # File operations
+
+    def open_image(self):
+        """Open an image from disk and reset history controls."""
+        path = filedialog.askopenfilename(
+            title="Open Image",
+            filetypes=[("Image Files", "*.jpg *.jpeg *.png *.bmp"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+        try:
+            self.model.load(path)
+            self.history.clear()
+
+            # reset sliders to defaults
+            self.blur_scale.set(1)
+            self.brightness_scale.set(0)
+            self.contrast_scale.set(0)
+            self.scale_scale.set(100)
+
+            self._preview_base_bgr = None
+            self._preview_active = False
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Open Failed", str(e))
+
+    def save_image(self):
+        """Save the current image to its existing file path."""
+        if not self._require_image():
+            return
+        if not self.model.file_path():
+            self.save_image_as()
+            return
+        try:
+            self._save_to_path(self.model.file_path())
+        except Exception as e:
+            messagebox.showerror("Save Failed", str(e))
+
+    def save_image_as(self):
+        """Prompt for a new save path and write the current image."""
+        if not self._require_image():
+            return
+        path = filedialog.asksaveasfilename(
+            title="Save Image As",
+            defaultextension=".png",
+            filetypes=[("PNG", "*.png"), ("JPG", "*.jpg *.jpeg"), ("BMP", "*.bmp")]
+        )
+        if not path:
+            return
+        try:
+            self._save_to_path(path)
+            self.model.set_file_path(path)
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Save As Failed", str(e))
+
+    def _save_to_path(self, path: str):
+        """
+        Write the current image to disk.
+
+        Raises:
+            ValueError if the path format is invalid or the write fails.
+        """
+        if not path:
+            raise ValueError("No save path selected.")
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in ImageModel.SUPPORTED_EXTS:
+            raise ValueError("Unsupported save format. Use JPG/PNG/BMP.")
+
+        img = self.model.current()
+        if img is None:
+            raise ValueError("No image to save.")
+
+        ok = cv2.imwrite(path, img)
+        if not ok:
+            raise ValueError("Failed to write file. Check permissions/path.")
+        self._update_status(f"Saved: {os.path.basename(path)}")
+
+    def _exit_app(self):
+        """Exit the application"""
+        if self.model.has_image():
+            if not messagebox.askyesno("Exit", "Exit the editor? Make sure you saved your work."):
+                return
+        self.root.destroy()
+
+    # Undo/Redo/Reset
+
+    def undo(self):
+        """Undo the last committed change and restore image UI."""
+        if not self._require_image():
+            return
+        prev = self.history.undo(self._current_state())
+        if prev is None:
+            self._update_status("Nothing to undo.")
+            return
+        self.model.set_current(prev.image_bgr)
+        if prev.file_path:
+            self.model.set_file_path(prev.file_path)
+        self._apply_ui_snapshot(prev.ui)
+        self._preview_base_bgr = None
+        self._preview_active = False
+        self._render()
+
+    def redo(self):
+        """Redo the last undone change and restore image UI."""
+        if not self._require_image():
+            return
+        nxt = self.history.redo(self._current_state())
+        if nxt is None:
+            self._update_status("Nothing to redo.")
+            return
+        self.model.set_current(nxt.image_bgr)
+        if nxt.file_path:
+            self.model.set_file_path(nxt.file_path)
+        self._apply_ui_snapshot(nxt.ui)
+        self._preview_base_bgr = None
+        self._preview_active = False
+        self._render()
+
+    def reset_to_original(self):
+        """Reset the working image to its original loaded state and reset controls."""
+        if not self._require_image():
+            return
+        try:
+            self._push_history()
+            self.model.reset_to_original()
+
+            self.blur_scale.set(1)
+            self.brightness_scale.set(0)
+            self.contrast_scale.set(0)
+            self.scale_scale.set(100)
+
+            self._preview_base_bgr = None
+            self._preview_active = False
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Reset Failed", str(e))
+
+    # Button Filters
+
+    def apply_grayscale(self):
+        """Apply grayscale conversion."""
+        if not self._require_image():
+            return
+        try:
+            self._push_history()
+            img = ImageProcessor.grayscale(self.model.current())
+            self.model.set_current(img)
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Grayscale Failed", str(e))
+
+    def apply_edge(self):
+        """Apply edge detection."""
+        if not self._require_image():
+            return
+        try:
+            self._push_history()
+            img = ImageProcessor.edge_detect(self.model.current())
+            self.model.set_current(img)
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Edge Detection Failed", str(e))
+
+    def apply_rotate(self, degrees: int):
+        """Rotate the image by 90/180/270 degrees."""
+        if not self._require_image():
+            return
+        try:
+            self._push_history()
+            img = ImageProcessor.rotate(self.model.current(), degrees)
+            self.model.set_current(img)
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Rotate Failed", str(e))
+
+    def apply_flip(self, mode: str):
+        """Flip the image horizontally or vertically."""
+        if not self._require_image():
+            return
+        try:
+            self._push_history()
+            img = ImageProcessor.flip(self.model.current(), mode)
+            self.model.set_current(img)
+            self._render()
+        except Exception as e:
+            messagebox.showerror("Flip Failed", str(e))
+
+    # Slider Preview
+    def _start_preview(self, _event=None):
+        """
+        Begin a slider preview session.
+
+        Stores the base image and base UI so the eventual commit can push the true
+        "before" state into history.
+        """
+        if not self._require_image():
+            return
+        self._preview_base_bgr = self.model.current()
+        self._preview_active = True
+
+    def _preview_slider(self, which: str):
+        """
+        Apply a live preview for the currently dragged slider.
+
+        Preview is applied from a frozen base image to prevent stacking effects
+        while dragging.
+        """
+        if not self._require_image():
+            return
+        if not self._preview_active or self._preview_base_bgr is None:
+            self._preview_base_bgr = self.model.current()
+            self._preview_active = True
+
+        try:
+            base = self._preview_base_bgr
+            ui = self._ui_snapshot()
+
+            if which == "blur":
+                out = ImageProcessor.blur(base, ui["blur"])
+            elif which == "brightness":
+                out = ImageProcessor.adjust_brightness(base, ui["brightness"])
+            elif which == "contrast":
+                out = ImageProcessor.adjust_contrast(base, ui["contrast"])
+            elif which == "scale":
+                out = ImageProcessor.resize_percent(base, ui["scale"])
+            else:
+                return
+
+            self.model.set_current(out)
+            self._render()
+        except Exception as e:
+            self._update_status(f"Preview error: {e}")
+
+    def _commit_preview(self, _event=None):
+        """
+        Commit the current preview to history.
+
+        Pushes the true "before" snapshot so undo restores
+        both the image and the slider positions correctly.
+        """
+        if not self._require_image():
+            return
+        if self._preview_base_bgr is None:
+            return
+
+        try:
+            # push base state before applying
+            self.history.push(EditorState(
+                image_bgr=self._preview_base_bgr.copy(),
+                file_path=self.model.file_path(),
+                ui=self._ui_snapshot()
+            ))
+            self._preview_base_bgr = None
+            self._preview_active = False
+            self._update_status("Adjustment applied.")
+        except Exception as e:
+            messagebox.showerror("Apply Failed", str(e))
+
+
+def main():
+    root = tk.Tk()
+    app = ImageEditorApp(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
                     
