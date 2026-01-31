@@ -107,3 +107,28 @@ class ImageEditorApp:
 
         # Scales
         style.configure("TScale", background=self.UI["panel"])
+
+    # Menu
+
+    def _build_menu(self):
+        """Create the application menu bar."""
+        menubar = tk.Menu(self.root)
+
+        file_menu = tk.Menu(menubar, tearoff=False)
+        file_menu.add_command(label="Open...", command=self.open_image, accelerator="Ctrl+O")
+        file_menu.add_separator()
+        file_menu.add_command(label="Save", command=self.save_image, accelerator="Ctrl+S")
+        file_menu.add_command(label="Save As...", command=self.save_image_as, accelerator="Ctrl+Shift+S")
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self._exit_app, accelerator="Alt+F4")
+        menubar.add_cascade(label="File", menu=file_menu)
+
+        edit_menu = tk.Menu(menubar, tearoff=False)
+        edit_menu.add_command(label="Undo", command=self.undo, accelerator="Ctrl+Z")
+        edit_menu.add_command(label="Redo", command=self.redo, accelerator="Ctrl+Y")
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Reset to Original", command=self.reset_to_original)
+        menubar.add_cascade(label="Edit", menu=edit_menu)
+
+        self.root.config(menu=menubar)
+
