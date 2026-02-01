@@ -15,3 +15,12 @@ class ImageModel:
     Images are stored internally in BGR format (OpenCV default)
     All getters return copies to preserve encapsulation
     """
+ SUPPORTED_EXTS = (".jpg", ".jpeg", ".png", ".bmp")
+
+    def __init__(self):
+        """
+        Initialise an empty image model with no loaded image.
+        """
+        self._original_bgr: Optional[np.ndarray] = None
+        self._current_bgr: Optional[np.ndarray] = None
+        self._file_path: Optional[str] = None
