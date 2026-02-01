@@ -24,3 +24,9 @@ class ImageModel:
         self._original_bgr: Optional[np.ndarray] = None
         self._current_bgr: Optional[np.ndarray] = None
         self._file_path: Optional[str] = None
+
+ def has_image(self) -> bool:
+        """
+        Check whether an image is currently loaded.
+        """
+        return self._current_bgr is not None
