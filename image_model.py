@@ -37,3 +37,12 @@ class ImageModel:
         """
         return os.path.basename(self._file_path) if self._file_path else "Untitled"
 
+ def current(self) -> Optional[np.ndarray]:
+        """
+        Get a copy of the current working image.
+
+        A copy is returned to prevent accidental modification
+        of internal state by other components.
+        """
+        return None if self._current_bgr is None else self._current_bgr.copy()
+
