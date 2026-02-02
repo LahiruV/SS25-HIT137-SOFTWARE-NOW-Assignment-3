@@ -30,3 +30,10 @@ class ImageModel:
         Check whether an image is currently loaded.
         """
         return self._current_bgr is not None
+
+ def filename(self) -> str:
+        """
+        Return the image filename for display purposes.
+        """
+        return os.path.basename(self._file_path) if self._file_path else "Untitled"
+
