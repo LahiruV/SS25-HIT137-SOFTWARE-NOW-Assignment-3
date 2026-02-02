@@ -42,7 +42,20 @@ class ImageModel:
         Get a copy of the current working image.
 
         A copy is returned to prevent accidental modification
+
+        
         of internal state by other components.
         """
         return None if self._current_bgr is None else self._current_bgr.copy()
+
+def set_current(self, img_bgr: np.ndarray) -> None:
+        """
+        Replace the current working image.
+
+        Raises:
+            ValueError: If the provided image is invalid.
+        """
+        if img_bgr is None or not isinstance(img_bgr, np.ndarray):
+            raise ValueError("Invalid image data.")
+        self._current_bgr = img_bgr.copy()
 
