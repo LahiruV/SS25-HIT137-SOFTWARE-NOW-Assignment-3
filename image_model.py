@@ -96,3 +96,15 @@ def set_file_path(self, path: str) -> None:
         Update the stored file path.
         """
         self._file_path = path
+
+def get_dimensions(self) -> Tuple[int, int]:
+        """
+        Return the current image dimensions.
+        """
+        if self._current_bgr is None:
+            return (0, 0)
+
+        h, w = self._current_bgr.shape[:2]
+        return (w, h)
+
+
