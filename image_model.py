@@ -83,4 +83,11 @@ def load(self, path: str) -> None:
         self._original_bgr = img.copy()
         self._current_bgr = img.copy()
 
+ def reset_to_original(self) -> None:
+        """
+        Restore the image to its original loaded state.
+        """
+        if self._original_bgr is None:
+            raise ValueError("No original image to reset to.")
+        self._current_bgr = self._original_bgr.copy()
 
