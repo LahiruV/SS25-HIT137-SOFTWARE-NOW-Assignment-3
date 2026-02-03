@@ -59,3 +59,28 @@ def set_current(self, img_bgr: np.ndarray) -> None:
             raise ValueError("Invalid image data.")
         self._current_bgr = img_bgr.copy()
 
+def load(self, path: str) -> None:
+        """
+        Load an image from disk and initialise editor state.
+
+        The loaded image is stored as both original and current versions
+
+        Raises:
+            ValueError: If the file path, format, or image data is invalid.
+        """
+        if not path:
+            raise ValueError("No file path provided.")
+
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in self.SUPPORTED_EXTS:
+            raise ValueError(f"Unsupported format: {ext}. Use JPG/PNG/BMP.")
+
+        img = cv2.imread(path, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError("Could not read image file.")
+        # Keep original immutable , current mutable 
+        self._file_path = path
+        self._original_bgr = img.copy()
+        self._current_bgr = img.copy()
+
+
