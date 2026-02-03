@@ -91,3 +91,8 @@ def load(self, path: str) -> None:
             raise ValueError("No original image to reset to.")
         self._current_bgr = self._original_bgr.copy()
 
+def set_file_path(self, path: str) -> None:
+        """
+        Update the stored file path.
+        """
+        self._file_path = path
