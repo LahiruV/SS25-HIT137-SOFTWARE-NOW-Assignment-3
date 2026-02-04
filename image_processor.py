@@ -53,3 +53,21 @@ class ImageProcessor:
         # GaussianBlur requires an odd kernel size; bump to next odd if needed.
         k = intensity if intensity % 2 == 1 else intensity + 1
         return cv2.GaussianBlur(img_bgr, (k, k), 0)
+
+    @staticmethod
+    def edge_detect(img_bgr: np.ndarray, low: int = 50, high: int = 150) -> np.ndarray:
+        """
+        Perform Canny edge detection and return as 3 channel BGR.
+
+        Args:
+            img_bgr: Source BGR image.
+            low: Lower threshold for hysteresis.
+            high: Upper threshold for hysteresis.
+
+        Returns:
+            Edge map converted back to BGR for consistent display.
+        """
+        ImageProcessor._require(img_bgr)
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, low, high)
+        return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
