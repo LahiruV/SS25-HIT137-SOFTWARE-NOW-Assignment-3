@@ -71,3 +71,23 @@ class ImageProcessor:
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, low, high)
         return cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+
+    @staticmethod
+    def adjust_brightness(img_bgr: np.ndarray, value: int) -> np.ndarray:
+        """
+        Adjust brightness by shifting pixel intensities.
+
+        Args:
+            img_bgr: Source BGR image.
+            value: Brightness shift (clamped to -100..100).
+
+        Returns:
+            Brightness-adjusted BGR image.
+        """
+        ImageProcessor._require(img_bgr)
+        if value < -100:
+            value = -100
+        if value > 100:
+            value = 100
+        # beta shifts brightness
+        return cv2.convertScaleAbs(img_bgr, alpha=1.0, beta=value)
