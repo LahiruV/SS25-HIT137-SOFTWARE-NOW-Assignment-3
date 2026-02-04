@@ -59,3 +59,19 @@ class HistoryManager:
         if len(self._undo) > self.max_states:
             self._undo.pop(0)
         self._redo.clear()
+
+    def undo(self, current_state: EditorState) -> Optional[EditorState]:
+        """
+        Revert to the previous editor state.
+
+        Args:
+            current_state: The current state before undo.
+
+        Returns:
+            The previous state, or None if undo is not possible.
+        """
+        if not self.can_undo():
+            return None
+        prev = self._undo.pop()
+        self._redo.append(current_state)
+        return prev
