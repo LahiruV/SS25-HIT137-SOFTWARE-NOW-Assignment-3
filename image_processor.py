@@ -31,3 +31,25 @@ class ImageProcessor:
         ImageProcessor._require(img_bgr)
         gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
         return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+
+    @staticmethod
+    def blur(img_bgr: np.ndarray, intensity: int) -> np.ndarray:
+        """
+        Apply Gaussian blur using an intensity-based kernel size.
+
+        Args:
+            img_bgr: Source BGR image.
+            intensity: Intended kernel size.
+
+        Returns:
+            Blurred BGR image.
+        """
+        ImageProcessor._require(img_bgr)
+        if intensity < 1:
+            intensity = 1
+        if intensity > 31:
+            intensity = 31
+            
+        # GaussianBlur requires an odd kernel size; bump to next odd if needed.
+        k = intensity if intensity % 2 == 1 else intensity + 1
+        return cv2.GaussianBlur(img_bgr, (k, k), 0)
