@@ -75,3 +75,19 @@ class HistoryManager:
         prev = self._undo.pop()
         self._redo.append(current_state)
         return prev
+        
+    def redo(self, current_state: EditorState) -> Optional[EditorState]:
+        """
+        Reapply a previously undone editor state.
+
+        Args:
+            current_state: The current state before redo.
+
+        Returns:
+            The next state, or None if redo is not possible.
+        """
+        if not self.can_redo():
+            return None
+        nxt = self._redo.pop()
+        self._undo.append(current_state)
+        return nxt
