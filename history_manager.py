@@ -24,3 +24,13 @@ class HistoryManager:
     undo: past states
     redo: states undone and available to restore
     """
+ def __init__(self, max_states: int = 30):
+        """
+        Initialise history manager.
+
+        Args:
+            max_states: Maximum number of undo states to retain.
+        """
+        self.max_states = max_states
+        self._undo: List[EditorState] = []
+        self._redo: List[EditorState] = []
