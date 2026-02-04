@@ -112,3 +112,27 @@ class ImageProcessor:
         # Map [-100..100] -> alpha [0.5..1.5] for a simple, intuitive contrast scale.
         alpha = 1.0 + (value / 200.0)
         return cv2.convertScaleAbs(img_bgr, alpha=alpha, beta=0)
+
+    @staticmethod
+    def rotate(img_bgr: np.ndarray, degrees: Literal[90, 180, 270]) -> np.ndarray:
+        """
+        Rotate the image by fixed right angle increments.
+
+        Args:
+            img_bgr: Source BGR image.
+            degrees: One of 90, 180, 270.
+
+        Returns:
+            Rotated BGR image.
+
+        Raises:
+            ValueError: If degrees is not 90/180/270.
+        """
+        ImageProcessor._require(img_bgr)
+        if degrees == 90:
+            return cv2.rotate(img_bgr, cv2.ROTATE_90_CLOCKWISE)
+        if degrees == 180:
+            return cv2.rotate(img_bgr, cv2.ROTATE_180)
+        if degrees == 270:
+            return cv2.rotate(img_bgr, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        raise ValueError("Rotation must be 90, 180, or 270 degrees.")
