@@ -158,3 +158,26 @@ class ImageProcessor:
         if mode == "vertical":
             return cv2.flip(img_bgr, 0)
         raise ValueError("Flip mode must be 'horizontal' or 'vertical'.")
+
+    @staticmethod
+    def resize_percent(img_bgr: np.ndarray, scale_percent: int) -> np.ndarray:
+        """
+        Resize the image by a percentage scale.
+
+        Args:
+            img_bgr: Source BGR image.
+            scale_percent: Percent scale (10 to 200).
+
+        Returns:
+            Resized BGR image.
+        """
+        ImageProcessor._require(img_bgr)
+        if scale_percent < 10:
+            scale_percent = 10
+        if scale_percent > 200:
+            scale_percent = 200
+        h, w = img_bgr.shape[:2]
+        new_w = max(1, int(w * scale_percent / 100.0))
+        new_h = max(1, int(h * scale_percent / 100.0))
+        # INTER_AREA is generally best for downscaling; fine for modest upscales too.
+        return cv2.resize(img_bgr, (new_w, new_h), interpolation=cv2.INTER_AREA)
