@@ -16,3 +16,11 @@ class EditorState:
     image_bgr: np.ndarray
     file_path: Optional[str]
     ui: Dict[str, Any] 
+
+class HistoryManager:
+    """
+    Manages undo and redo stacks for the image editor.
+
+    undo: past states
+    redo: states undone and available to restore
+    """
