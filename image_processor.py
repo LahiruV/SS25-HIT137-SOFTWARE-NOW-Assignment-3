@@ -136,3 +136,25 @@ class ImageProcessor:
         if degrees == 270:
             return cv2.rotate(img_bgr, cv2.ROTATE_90_COUNTERCLOCKWISE)
         raise ValueError("Rotation must be 90, 180, or 270 degrees.")
+
+    @staticmethod
+    def flip(img_bgr: np.ndarray, mode: Literal["horizontal", "vertical"]) -> np.ndarray:
+        """
+        Flip an image horizontally or vertically.
+
+        Args:
+            img_bgr: Source BGR image.
+            mode: "horizontal" or "vertical".
+
+        Returns:
+            Flipped BGR image.
+
+        Raises:
+            ValueError: If mode is invalid.
+        """
+        ImageProcessor._require(img_bgr)
+        if mode == "horizontal":
+            return cv2.flip(img_bgr, 1)
+        if mode == "vertical":
+            return cv2.flip(img_bgr, 0)
+        raise ValueError("Flip mode must be 'horizontal' or 'vertical'.")
