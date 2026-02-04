@@ -91,3 +91,24 @@ class ImageProcessor:
             value = 100
         # beta shifts brightness
         return cv2.convertScaleAbs(img_bgr, alpha=1.0, beta=value)
+
+    @staticmethod
+    def adjust_contrast(img_bgr: np.ndarray, value: int) -> np.ndarray:
+        """
+        Adjust contrast by scaling pixel intensities.
+
+        Args:
+            img_bgr: Source BGR image.
+            value: Contrast adjustment (clamped to -100..100).
+
+        Returns:
+            Contrast-adjusted BGR image.
+        """
+        ImageProcessor._require(img_bgr)
+        if value < -100:
+            value = -100
+        if value > 100:
+            value = 100
+        # Map [-100..100] -> alpha [0.5..1.5] for a simple, intuitive contrast scale.
+        alpha = 1.0 + (value / 200.0)
+        return cv2.convertScaleAbs(img_bgr, alpha=alpha, beta=0)
