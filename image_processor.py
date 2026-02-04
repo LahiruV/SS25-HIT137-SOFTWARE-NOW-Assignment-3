@@ -19,3 +19,15 @@ class ImageProcessor:
         """
         if img is None or not isinstance(img, np.ndarray):
             raise ValueError("No image loaded.")
+
+    @staticmethod
+    def grayscale(img_bgr: np.ndarray) -> np.ndarray:
+        """
+        Convert an image to grayscale and return as 3-channel BGR.
+
+        Keeping BGR output simplifies GUI rendering and avoids branching
+        in code that assumes 3 channels.
+        """
+        ImageProcessor._require(img_bgr)
+        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+        return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
