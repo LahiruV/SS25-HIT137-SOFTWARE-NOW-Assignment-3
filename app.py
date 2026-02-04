@@ -13,6 +13,7 @@ from image_model import ImageModel
 from image_processor import ImageProcessor
 from history_manager import HistoryManager, EditorState
 
+
 class ImageEditorApp:
     """
     Uses ImageModel (data)
@@ -51,7 +52,8 @@ class ImageEditorApp:
         self._build_layout()
         self._bind_shortcuts()
         self._update_status("Ready. Open an image to begin.")
-        
+
+
     def _apply_theme(self):
         """Apply a theme using ttk styling."""
         style = ttk.Style()
@@ -243,6 +245,14 @@ class ImageEditorApp:
         self.status = ttk.Label(self.root, text="", anchor="w", padding=(12, 8), style="Muted.TLabel")
         self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
+    def _bind_shortcuts(self):
+        """Bind keyboard shortcuts for common actions."""
+        self.root.bind("<Control-o>", lambda _e: self.open_image())
+        self.root.bind("<Control-s>", lambda _e: self.save_image())
+        self.root.bind("<Control-Shift-S>", lambda _e: self.save_image_as())
+        self.root.bind("<Control-z>", lambda _e: self.undo())
+        self.root.bind("<Control-y>", lambda _e: self.redo())
+
     # Helpers 
 
     def _require_image(self) -> bool:
@@ -251,7 +261,7 @@ class ImageEditorApp:
             messagebox.showwarning("No Image", "Please open an image first (File → Open).")
             return False
         return True
-    
+
     def _cv_to_tk(self, img_bgr: np.ndarray, max_w: int, max_h: int) -> ImageTk.PhotoImage:
         """
         Convert an OpenCV BGR image to a Tk-compatible PhotoImage.
@@ -311,7 +321,7 @@ class ImageEditorApp:
             "contrast": int(float(self.contrast_scale.get())),
             "scale": int(float(self.scale_scale.get())),
         }
-    
+
     def _apply_ui_snapshot(self, ui: Dict[str, Any]):
         """Apply UI values to both variables and visible controls."""
         self.blur_var.set(int(ui.get("blur", 1)))
@@ -612,4 +622,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-                    

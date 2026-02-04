@@ -4,7 +4,6 @@ from typing import Optional, List, Dict, Any
 import numpy as np
 
 
-
 @dataclass
 class EditorState:
     """
@@ -15,7 +14,8 @@ class EditorState:
     """
     image_bgr: np.ndarray
     file_path: Optional[str]
-    ui: Dict[str, Any] 
+    ui: Dict[str, Any]  
+
 
 class HistoryManager:
     """
@@ -34,7 +34,7 @@ class HistoryManager:
         self.max_states = max_states
         self._undo: List[EditorState] = []
         self._redo: List[EditorState] = []
-     
+
     def clear(self) -> None:
         """Clear all undo and redo history."""
         self._undo.clear()
@@ -75,7 +75,7 @@ class HistoryManager:
         prev = self._undo.pop()
         self._redo.append(current_state)
         return prev
-        
+
     def redo(self, current_state: EditorState) -> Optional[EditorState]:
         """
         Reapply a previously undone editor state.
