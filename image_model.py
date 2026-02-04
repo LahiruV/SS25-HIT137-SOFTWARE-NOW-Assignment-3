@@ -15,7 +15,8 @@ class ImageModel:
     Images are stored internally in BGR format (OpenCV default)
     All getters return copies to preserve encapsulation
     """
- SUPPORTED_EXTS = (".jpg", ".jpeg", ".png", ".bmp")
+
+    SUPPORTED_EXTS = (".jpg", ".jpeg", ".png", ".bmp")
 
     def __init__(self):
         """
@@ -25,30 +26,34 @@ class ImageModel:
         self._current_bgr: Optional[np.ndarray] = None
         self._file_path: Optional[str] = None
 
- def has_image(self) -> bool:
+    def has_image(self) -> bool:
         """
         Check whether an image is currently loaded.
         """
         return self._current_bgr is not None
 
- def filename(self) -> str:
+    def file_path(self) -> Optional[str]:
+        """
+        Return the full file path of the loaded image, if any.
+        """
+        return self._file_path
+
+    def filename(self) -> str:
         """
         Return the image filename for display purposes.
         """
         return os.path.basename(self._file_path) if self._file_path else "Untitled"
 
- def current(self) -> Optional[np.ndarray]:
+    def current(self) -> Optional[np.ndarray]:
         """
         Get a copy of the current working image.
 
         A copy is returned to prevent accidental modification
-
-        
         of internal state by other components.
         """
         return None if self._current_bgr is None else self._current_bgr.copy()
 
-def set_current(self, img_bgr: np.ndarray) -> None:
+    def set_current(self, img_bgr: np.ndarray) -> None:
         """
         Replace the current working image.
 
@@ -59,7 +64,7 @@ def set_current(self, img_bgr: np.ndarray) -> None:
             raise ValueError("Invalid image data.")
         self._current_bgr = img_bgr.copy()
 
-def load(self, path: str) -> None:
+    def load(self, path: str) -> None:
         """
         Load an image from disk and initialise editor state.
 
@@ -83,7 +88,7 @@ def load(self, path: str) -> None:
         self._original_bgr = img.copy()
         self._current_bgr = img.copy()
 
- def reset_to_original(self) -> None:
+    def reset_to_original(self) -> None:
         """
         Restore the image to its original loaded state.
         """
@@ -91,13 +96,13 @@ def load(self, path: str) -> None:
             raise ValueError("No original image to reset to.")
         self._current_bgr = self._original_bgr.copy()
 
-def set_file_path(self, path: str) -> None:
+    def set_file_path(self, path: str) -> None:
         """
         Update the stored file path.
         """
         self._file_path = path
 
-def get_dimensions(self) -> Tuple[int, int]:
+    def get_dimensions(self) -> Tuple[int, int]:
         """
         Return the current image dimensions.
         """
@@ -106,5 +111,3 @@ def get_dimensions(self) -> Tuple[int, int]:
 
         h, w = self._current_bgr.shape[:2]
         return (w, h)
-
-
