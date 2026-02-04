@@ -47,3 +47,15 @@ class HistoryManager:
     def can_redo(self) -> bool:
         """Return True if a redo operation is possible."""
         return len(self._redo) > 0
+
+    def push(self, state: EditorState) -> None:
+        """
+        Push a new editor state onto the undo stack.
+
+        Pushing a new state invalidates the redo stack.
+        """
+        self._undo.append(state)
+        # Enforce maximum history size by discarding the oldest state.
+        if len(self._undo) > self.max_states:
+            self._undo.pop(0)
+        self._redo.clear()
