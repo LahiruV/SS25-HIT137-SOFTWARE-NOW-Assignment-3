@@ -43,3 +43,7 @@ class HistoryManager:
     def can_undo(self) -> bool:
         """Return True if an undo operation is possible."""
         return len(self._undo) > 0
+
+    def can_redo(self) -> bool:
+        """Return True if a redo operation is possible."""
+        return len(self._redo) > 0
